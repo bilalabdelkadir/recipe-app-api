@@ -10,6 +10,9 @@ ENV PYTHONUNBUFFERED 1
 # Copy the requirements file into a temporary directory in the image
 COPY ./requirements.txt /tmp/requirements.txt
 
+# Copy the dev requirements file into a temporary directory in the image
+COPY ./requirements.dev.txt /tmp/requirements.dev.txt
+
 # Copy our app's code from the local 'app' directory into the '/app' directory in the image
 COPY ./app /app
 
@@ -20,6 +23,9 @@ WORKDIR /app
 # Inform Docker that our app will communicate on port 8000
 EXPOSE 8000
 
+
+ARG DEV=false
+
 # Set of commands to execute:
 # 1. Create a Python virtual environment inside the container
 # 2. Upgrade 'pip' inside the virtual environment to ensure we have the latest version
@@ -29,11 +35,14 @@ EXPOSE 8000
 RUN python -m venv /py && \
     /py/bin/pip install --upgrade pip && \
     /py/bin/pip install -r /tmp/requirements.txt && \
+    if [ "$DEV" = "true" ]; \
+        then /py/bin/pip install -r /tmp/requirements.dev.txt ; \
+    fi && \
     rm -rf /tmp && \
     adduser \
-    --disabled-password \
-    --no-create-home \
-    django-user
+        --disabled-password \
+        --no-create-home \
+        django-user
 
 # Add the virtual environment's binaries to the system's PATH
 # This ensures tools like Python and pip from our virtual environment are used
